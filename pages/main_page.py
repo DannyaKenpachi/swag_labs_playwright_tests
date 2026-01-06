@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 
 class MainPage():
-    def __init__(self, page: Page):
+    def __init__(self, page: Page) -> None:
         self.page = page
         self.cart = page.locator("[data-test=\"shopping-cart-link\"]")
     
