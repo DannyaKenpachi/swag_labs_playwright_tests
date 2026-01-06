@@ -1,4 +1,4 @@
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 class AuthorizationPage():
     def __init__(self, page: Page):
@@ -11,3 +11,4 @@ class AuthorizationPage():
         self.username.fill('standard_user')
         self.password.fill('secret_sauce')
         self.button_to_login.click()
+        expect(self.page.locator("[data-test=\"title\"]")).to_have_text('Products')
