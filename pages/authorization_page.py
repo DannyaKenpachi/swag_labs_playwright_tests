@@ -8,6 +8,7 @@ class AuthorizationPage():
         self.button_to_login = page.locator("[data-test=\"login-button\"]")
     
     def login(self):
+        self.page.goto('https://www.saucedemo.com/')
         self.username.fill('standard_user')
         self.password.fill('secret_sauce')
         self.button_to_login.click()
