@@ -6,7 +6,7 @@ class CartPage():
         self.checkout = page.locator("[data-test=\"checkout\"]")
 
     def check_product(self, product: str):
-        expect(self.page.locator("[data-test=\"item-4-title-link\"]")).to_have_text(product)
+        expect(self.page.locator("[data-test=\"inventory-item\"]").filter(has_text=product)).to_be_visible()
 
     def buy_product(self):
         self.checkout.click()
