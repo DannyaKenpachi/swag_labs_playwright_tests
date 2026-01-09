@@ -9,7 +9,7 @@ class MainPage():
         card_of_product = self.page.locator("[data-test=\"inventory-item-description\"]").filter(has_text=product)
         button_for_add_to_cart = card_of_product.get_by_role('button', name='Add to cart')
         button_for_add_to_cart.click()
-        expect(button_for_add_to_cart).to_have_text('remove')
+        expect(card_of_product.get_by_role('button', name='Remove')).to_be_visible()
         expect(self.cart).to_have_text('1')
 
     def open_cart(self):

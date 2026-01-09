@@ -7,8 +7,8 @@ def test_buy_product(authorization_page, main_page, cart_page, checkout_page, co
     main_page.add_to_cart('Sauce Labs Backpack')
     main_page.open_cart()
 
-    cart_page.check_product()
-    cart_page.buy_product('Sauce Labs Backpack')
+    cart_page.check_product('Sauce Labs Backpack')
+    cart_page.buy_product()
 
     checkout_page.send_data()
 
