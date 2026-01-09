@@ -1,0 +1,64 @@
+name: Automated Tests with Allure Report
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: write  # Разрешаем изменять репозиторий (для публикации отчета)
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Скачиваем код
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Ставим Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      # 3. Ставим зависимости
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install chromium
+
+      # 4. Запускаем тесты
+      # continue-on-error: true — ВАЖНО! Чтобы шаг не "краснел" сразу, 
+      # и мы успели сгенерировать отчет.
+      - name: Run Tests
+        run: python -m pytest tests/ --alluredir=allure-results
+        continue-on-error: true
+
+      # 5. Генерируем отчет (используем готовый экшен)
+      - name: Get Allure history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Allure Report action from marketplace
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      # 6. Публикуем отчет на GitHub Pages
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
