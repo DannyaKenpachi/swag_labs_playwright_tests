@@ -5,60 +5,57 @@ on:
     branches: [ "main", "master" ]
 
 permissions:
-  contents: write  # Разрешаем изменять репозиторий (для публикации отчета)
+  contents: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Скачиваем код
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Ставим Python
+      # 1. Устанавливаем Java (нужна для работы Allure)
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 2. Скачиваем и устанавливаем Allure вручную (без сторонних экшенов)
+      - name: Install Allure
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -zxvf allure-2.27.0.tgz
+          sudo mv allure-2.27.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+          allure --version
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
-      # 3. Ставим зависимости
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           playwright install chromium
 
-      # 4. Запускаем тесты
-      # continue-on-error: true — ВАЖНО! Чтобы шаг не "краснел" сразу, 
-      # и мы успели сгенерировать отчет.
+      # 3. Запускаем тесты
       - name: Run Tests
         run: python -m pytest tests/ --alluredir=allure-results
         continue-on-error: true
 
-      # 5. Генерируем отчет (используем готовый экшен)
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      # 4. Генерируем отчет в папку public
+      - name: Generate Report
+        run: allure generate allure-results --clean -o public
 
-      - name: Allure Report action from marketplace
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-
-      # 6. Публикуем отчет на GitHub Pages
-      - name: Deploy report to Github Pages
-        if: always()
+      # 5. Публикуем
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: ./public
+          force_orphan: true
