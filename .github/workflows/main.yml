@@ -5,60 +5,45 @@ on:
     branches: [ "main", "master" ]
 
 permissions:
-  contents: write  # Разрешаем изменять репозиторий (для публикации отчета)
+  contents: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Скачиваем код
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Ставим Python
+      # 1. Установка Allure (инструмента командной строки)
+      - name: Setup Allure
+        uses: bat-leth/setup-allure@v1
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
-      # 3. Ставим зависимости
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           playwright install chromium
 
-      # 4. Запускаем тесты
-      # continue-on-error: true — ВАЖНО! Чтобы шаг не "краснел" сразу, 
-      # и мы успели сгенерировать отчет.
+      # 2. Запуск тестов -> создается папка allure-results
       - name: Run Tests
         run: python -m pytest tests/ --alluredir=allure-results
         continue-on-error: true
 
-      # 5. Генерируем отчет (используем готовый экшен)
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      # 3. Генерация отчета -> создаем папку public
+      - name: Generate Report
+        run: allure generate allure-results --clean -o public
 
-      - name: Allure Report action from marketplace
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-
-      # 6. Публикуем отчет на GitHub Pages
-      - name: Deploy report to Github Pages
-        if: always()
+      # 4. Публикация папки public в ветку gh-pages
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: ./public   # Публикуем именно папку с HTML
+          force_orphan: true      # Полная перезапись ветки
