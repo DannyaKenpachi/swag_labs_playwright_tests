@@ -1,0 +1,2 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sat Jan 10 09:50:06 UTC 2026","Sat Jan 10 09:50:07 UTC 2026","736","tests","test_buy_product","","","","test_buy_product[chromium]",""
